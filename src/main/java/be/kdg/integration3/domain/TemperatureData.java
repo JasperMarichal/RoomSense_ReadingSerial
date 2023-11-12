@@ -2,18 +2,19 @@ package be.kdg.integration3.domain;
 
 import java.sql.Timestamp;
 
+
 public class TemperatureData implements RawDataRecord {
-    private final Timestamp timestamp;
+    private final long timestamp;
     private final int temperature;
 
 
-    public TemperatureData(Timestamp timestamp, int temperature) {
+    public TemperatureData(long timestamp, int temperature) {
         this.timestamp = timestamp;
         this.temperature = temperature;
     }
 
     @Override
-    public Timestamp getTimestamp() {
+    public long getTimestamp() {
         return timestamp;
     }
 

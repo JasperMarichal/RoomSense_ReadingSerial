@@ -4,10 +4,10 @@ import java.sql.Timestamp;
 
 public class CO2Data implements RawDataRecord{
 
-    private final Timestamp timestamp;
+    private final long timestamp;
     private final int analogConcentration;
 
-    public CO2Data(Timestamp timestamp, int analogConcentration) {
+    public CO2Data(long timestamp, int analogConcentration) {
         this.timestamp = timestamp;
         this.analogConcentration = analogConcentration;
     }
@@ -18,7 +18,7 @@ public class CO2Data implements RawDataRecord{
     }
 
     @Override
-    public Timestamp getTimestamp() {
+    public long getTimestamp() {
         return timestamp;
     }
 

@@ -8,14 +8,17 @@ public class Main {
         SerialRead read = new SerialRead();
         JSonWriter writer = new JSonWriter(read);
 
-        System.out.println("Start time " + Timestamp.from(Instant.now()));
+        while (true) {
+            System.out.println("Start time " + Timestamp.from(Instant.now()));
 
-        while (!(read.getRecordList().size() > 20)){
-            read.readSerial();
+            while (!(read.getRecordList().size() > 30)) {
+                read.readSerial();
+            }
+            System.out.println(read.getRecordList());
+            writer.saveAllData();
+            read.clearRecordList();
+
+            System.out.println("End time " + Timestamp.from(Instant.now()));
         }
-        writer.saveAllData();
-        read.clearRecordList();
-
-        System.out.println("End time " + Timestamp.from(Instant.now()));
     }
 }

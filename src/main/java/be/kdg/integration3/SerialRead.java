@@ -66,7 +66,8 @@ public class SerialRead {
             }
             if(readingDataValue && c == '\n') {
                 readingDataValue = false;
-                Timestamp recordTimestamp = Timestamp.from(Instant.now());
+                long recordTimestamp = Timestamp.from(Instant.now()).getTime();
+//                if (currentDataType != 'S') System.out.print(currentDataType + " " + currentValue);
                 switch (currentDataType) {
                     case 'T':
                         recordList.add(new TemperatureData(recordTimestamp, currentValue));

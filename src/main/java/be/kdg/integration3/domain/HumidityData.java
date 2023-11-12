@@ -4,16 +4,16 @@ import java.sql.Timestamp;
 
 public class HumidityData implements RawDataRecord{
 
-    private final Timestamp timestamp;
+    private final long timestamp;
     private final int humidity;
 
-    public HumidityData(Timestamp timestamp, int humidity) {
+    public HumidityData(long timestamp, int humidity) {
         this.timestamp = timestamp;
         this.humidity = humidity;
     }
 
     @Override
-    public Timestamp getTimestamp() {
+    public long getTimestamp() {
         return timestamp;
     }
 

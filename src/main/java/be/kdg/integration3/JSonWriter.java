@@ -34,7 +34,7 @@ public class JSonWriter {
         saveTemperature(temperature);
         saveHumidity(humidity);
 //        saveSound(sound);
-//        saveCO2(CO2);
+        saveCO2(CO2);
     }
 
     private void saveTemperature(List<TemperatureData> temperatureData){
@@ -60,7 +60,7 @@ public class JSonWriter {
 
     private void saveCO2(List<CO2Data> CO2Data){
         Timestamp timestamp = Timestamp.from(Instant.now());
-        String name = "co2" + timestamp.getTime();
+        String name = "CO2" + timestamp.getTime();
 
         saveToJson(CO2Data, name);
     }
