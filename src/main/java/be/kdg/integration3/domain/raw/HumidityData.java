@@ -1,6 +1,4 @@
-package be.kdg.integration3.domain;
-
-import java.sql.Timestamp;
+package be.kdg.integration3.domain.raw;
 
 public class HumidityData implements RawDataRecord{
 

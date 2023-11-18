@@ -1,6 +1,6 @@
 package be.kdg.integration3;
 
-import be.kdg.integration3.domain.*;
+import be.kdg.integration3.domain.raw.*;
 import com.fazecast.jSerialComm.SerialPort;
 
 import java.sql.Timestamp;
@@ -67,7 +67,6 @@ public class SerialRead {
             if(readingDataValue && c == '\n') {
                 readingDataValue = false;
                 long recordTimestamp = Timestamp.from(Instant.now()).getTime();
-//                if (currentDataType != 'S') System.out.print(currentDataType + " " + currentValue);
                 switch (currentDataType) {
                     case 'T':
                         recordList.add(new TemperatureData(recordTimestamp, currentValue));
@@ -86,7 +85,6 @@ public class SerialRead {
 //                        newDataCount++;
                         break;
                 }
-//                logger.debug("Added new record: {} {}", currentDataType, currentValue);
                 currentDataType = ' ';
             }
         }

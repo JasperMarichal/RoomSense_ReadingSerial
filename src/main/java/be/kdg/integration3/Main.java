@@ -6,7 +6,7 @@ import java.time.Instant;
 public class Main {
     public static void main(String[] args) {
         SerialRead read = new SerialRead();
-        JSonWriter writer = new JSonWriter(read);
+        JsonWriter writer = new JsonWriter(read);
 
         while (true) {
             System.out.println("Start time " + Timestamp.from(Instant.now()));
