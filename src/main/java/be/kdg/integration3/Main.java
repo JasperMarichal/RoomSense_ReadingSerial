@@ -14,7 +14,7 @@ public class Main {
             while (!(read.getRecordList().size() > 30)) {
                 read.readSerial();
             }
-            System.out.println(read.getRecordList());
+//            System.out.println(read.getRecordList());
             writer.saveAllData();
             read.clearRecordList();
 
