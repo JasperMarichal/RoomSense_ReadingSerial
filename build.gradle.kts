@@ -19,6 +19,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
     implementation("com.google.code.gson:gson:2.10.1")
     implementation("com.fazecast:jSerialComm:2.10.3")
+    runtimeOnly("org.postgresql:postgresql:42.6.0")
 }
 
 tasks.test {
