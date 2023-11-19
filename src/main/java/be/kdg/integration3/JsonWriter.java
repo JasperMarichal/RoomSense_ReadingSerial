@@ -11,7 +11,7 @@ import java.time.Instant;
 import java.util.List;
 
 
-public class JsonWriter {
+public class JsonWriter implements DataWriter {
 
     private final SerialRead serial;
     GsonBuilder gsonBuilder;
@@ -21,6 +21,7 @@ public class JsonWriter {
         gsonBuilder = new GsonBuilder();
     }
 
+    @Override
     public void saveAllData() {
         List<RawDataRecord> data = serial.getRecordList();
 

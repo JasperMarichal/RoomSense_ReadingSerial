@@ -6,7 +6,15 @@ import java.time.Instant;
 public class Main {
     public static void main(String[] args) {
         SerialRead read = new SerialRead();
-        JsonWriter writer = new JsonWriter(read);
+        DataWriter writer;
+        try {
+            writer = new DBWriter(read, null);
+        }catch (RuntimeException e) {
+            System.err.println(e.getMessage());
+            System.err.println("Falling back to JsonWriter...");
+            writer = new JsonWriter(read);
+        }
+
 
         while (true) {
             System.out.println("Start time " + Timestamp.from(Instant.now()));
@@ -14,7 +22,6 @@ public class Main {
             while (!(read.getRecordList().size() > 30)) {
                 read.readSerial();
             }
-//            System.out.println(read.getRecordList());
             writer.saveAllData();
             read.clearRecordList();
 
