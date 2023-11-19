@@ -1,6 +1,6 @@
 package be.kdg.integration3;
 
-import be.kdg.integration3.domain.*;
+import be.kdg.integration3.domain.raw.*;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -8,21 +8,20 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.util.List;
 
 
-public class JSonWriter {
+public class JsonWriter implements DataWriter {
 
     private final SerialRead serial;
     GsonBuilder gsonBuilder;
 
-    public JSonWriter(SerialRead serialRead) {
+    public JsonWriter(SerialRead serialRead) {
         this.serial = serialRead;
         gsonBuilder = new GsonBuilder();
-//        gsonBuilder.setPrettyPrinting();
     }
 
+    @Override
     public void saveAllData() {
         List<RawDataRecord> data = serial.getRecordList();
 
