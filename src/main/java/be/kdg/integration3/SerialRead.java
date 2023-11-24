@@ -17,7 +17,10 @@ public class SerialRead {
 
     private List<RawDataRecord> recordList;
 
-    public SerialRead() {
+    private final DataPreprocessor preprocessor;
+
+    public SerialRead(DataPreprocessor preprocessor) {
+        this.preprocessor = preprocessor;
         this.recordList = new ArrayList<>();
         initSerial();
         this.currentDataType = ' ';
@@ -37,7 +40,7 @@ public class SerialRead {
 
     public int readSerial() {
         try {
-            while (port.bytesAvailable() > 0) {
+            if(port.bytesAvailable() > 0) {
                 byte[] readBuffer = new byte[port.bytesAvailable()];
                 int numRead = port.readBytes(readBuffer, readBuffer.length);
                 char[] readChars = new char[numRead];
@@ -68,27 +71,21 @@ public class SerialRead {
                 readingDataValue = false;
                 long recordTimestamp = Timestamp.from(Instant.now()).getTime();
                 switch (currentDataType) {
-                    case 'T':
-                        recordList.add(new TemperatureData(recordTimestamp, currentValue));
-                        newDataCount++;
-                        break;
-                    case 'H':
-                        recordList.add(new HumidityData(recordTimestamp, currentValue));
-                        newDataCount++;
-                        break;
-                    case 'C':
-                        recordList.add(new CO2Data(recordTimestamp, currentValue));
-                        newDataCount++;
-                        break;
-                    case 'S':
-//                        recordList.add(new SoundData(recordTimestamp, currentValue));
-//                        newDataCount++;
-                        break;
+                    case 'T' -> newDataCount += enterData(new TemperatureData(recordTimestamp, currentValue));
+                    case 'H' -> newDataCount += enterData(new HumidityData(recordTimestamp, currentValue));
+                    case 'C' -> newDataCount += enterData(new CO2Data(recordTimestamp, currentValue));
+                    case 'S' -> newDataCount += enterData(new SoundData(recordTimestamp, currentValue));
                 }
                 currentDataType = ' ';
             }
         }
         return newDataCount;
+    }
+
+    private int enterData(RawDataRecord newEntry) {
+        List<RawDataRecord> keptData = preprocessor.processRawData(newEntry);
+        recordList.addAll(keptData);
+        return keptData.size();
     }
 
     public List<RawDataRecord> getRecordList() {

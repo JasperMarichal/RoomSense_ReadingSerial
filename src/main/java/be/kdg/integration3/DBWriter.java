@@ -1,19 +1,17 @@
 package be.kdg.integration3;
 
+import be.kdg.integration3.domain.processed.NoiseData;
 import be.kdg.integration3.domain.raw.*;
 
 import java.sql.*;
-import java.time.Instant;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 public class DBWriter implements DataWriter {
     public static final String dbCredentials = System.getenv("rs_db_cred");
 
     private final SerialRead serial;
     private final Connection connection;
-    private Integer roomId;
+    private final Integer roomId;
 
     public DBWriter(SerialRead serialRead, Integer roomId) throws RuntimeException {
         this.roomId = roomId;
@@ -39,12 +37,13 @@ public class DBWriter implements DataWriter {
         List<RawDataRecord> humidity = data.stream().filter(record -> record instanceof HumidityData).toList();
         List<RawDataRecord> sound = data.stream().filter(record -> record instanceof SoundData).toList();
         List<RawDataRecord> co2 = data.stream().filter(record -> record instanceof CO2Data).toList();
+        List<RawDataRecord> noise = data.stream().filter(record -> record instanceof NoiseData).toList();
 
         saveEntries("temperature_entry", roomId, temperature);
         saveEntries("humidity_entry", roomId, humidity);
         saveEntries("raw_sound_entry", roomId, sound);
         saveEntries("co2_entry", roomId, co2);
-        //saveEntries("noise_entry", roomId, noise);
+        saveEntries("noise_entry", roomId, noise);
 
     }
 

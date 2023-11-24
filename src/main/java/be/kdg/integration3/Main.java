@@ -5,7 +5,8 @@ import java.time.Instant;
 
 public class Main {
     public static void main(String[] args) {
-        SerialRead read = new SerialRead();
+        DataPreprocessor preprocessor = new SoundPreprocessor();
+        SerialRead read = new SerialRead(preprocessor);
         DataWriter writer;
         try {
             writer = new DBWriter(read, null);
