@@ -1,11 +1,12 @@
-package be.kdg.integration3;
+package be.kdg.integration3.reader;
 
+import be.kdg.integration3.reader.preprocessor.DataPreprocessor;
 import be.kdg.integration3.domain.raw.*;
+import be.kdg.integration3.writer.RawDataWriter;
 import com.fazecast.jSerialComm.SerialPort;
 
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -15,13 +16,12 @@ public class SerialRead {
     private int currentValue;
     private char currentDataType;
 
-    private List<RawDataRecord> recordList;
-
+    private final RawDataWriter writer;
     private final DataPreprocessor preprocessor;
 
-    public SerialRead(DataPreprocessor preprocessor) {
+    public SerialRead(DataPreprocessor preprocessor, RawDataWriter writer) {
         this.preprocessor = preprocessor;
-        this.recordList = new ArrayList<>();
+        this.writer = writer;
         initSerial();
         this.currentDataType = ' ';
     }
@@ -84,15 +84,8 @@ public class SerialRead {
 
     private int enterData(RawDataRecord newEntry) {
         List<RawDataRecord> keptData = preprocessor.processRawData(newEntry);
-        recordList.addAll(keptData);
+        writer.addRawDataEntries(keptData);
         return keptData.size();
     }
 
-    public List<RawDataRecord> getRecordList() {
-        return recordList;
-    }
-
-    public void clearRecordList() {
-        recordList = new ArrayList<>();
-    }
 }

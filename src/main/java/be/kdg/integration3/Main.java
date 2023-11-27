@@ -1,32 +1,31 @@
 package be.kdg.integration3;
 
-import java.sql.Timestamp;
-import java.time.Instant;
+import be.kdg.integration3.reader.SerialRead;
+import be.kdg.integration3.reader.preprocessor.DataPreprocessor;
+import be.kdg.integration3.reader.preprocessor.SoundPreprocessor;
+import be.kdg.integration3.writer.DBWriter;
+import be.kdg.integration3.writer.JsonWriter;
+import be.kdg.integration3.writer.RawDataWriter;
 
 public class Main {
+    public static final int SAVE_BATCH_SIZE = 50;
+
     public static void main(String[] args) {
-        DataPreprocessor preprocessor = new SoundPreprocessor();
-        SerialRead read = new SerialRead(preprocessor);
-        DataWriter writer;
+        RawDataWriter writer;
         try {
-            writer = new DBWriter(read, null);
+            writer = new DBWriter(null, SAVE_BATCH_SIZE);
         }catch (RuntimeException e) {
             System.err.println(e.getMessage());
             System.err.println("Falling back to JsonWriter...");
-            writer = new JsonWriter(read);
+            writer = new JsonWriter(SAVE_BATCH_SIZE);
         }
 
+        DataPreprocessor preprocessor = new SoundPreprocessor(writer);
+        SerialRead read = new SerialRead(preprocessor, writer);
 
         while (true) {
-            System.out.println("Start time " + Timestamp.from(Instant.now()));
-
-            while (!(read.getRecordList().size() > 30)) {
-                read.readSerial();
-            }
+            read.readSerial();
             writer.saveAllData();
-            read.clearRecordList();
-
-            System.out.println("End time " + Timestamp.from(Instant.now()));
         }
     }
 }

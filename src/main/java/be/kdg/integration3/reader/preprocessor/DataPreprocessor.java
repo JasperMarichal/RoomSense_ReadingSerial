@@ -1,4 +1,4 @@
-package be.kdg.integration3;
+package be.kdg.integration3.reader.preprocessor;
 
 import be.kdg.integration3.domain.raw.RawDataRecord;
 
