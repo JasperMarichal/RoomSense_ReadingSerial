@@ -1,4 +1,4 @@
-package be.kdg.integration3;
+package be.kdg.integration3.writer;
 
 import be.kdg.integration3.domain.raw.*;
 import com.google.gson.Gson;
@@ -8,32 +8,52 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 
-public class JsonWriter implements DataWriter {
+public class JsonWriter implements RawDataWriter {
+    private final GsonBuilder gsonBuilder;
 
-    private final SerialRead serial;
-    GsonBuilder gsonBuilder;
+    private final int batchSize;
 
-    public JsonWriter(SerialRead serialRead) {
-        this.serial = serialRead;
+    private final List<RawDataRecord> data;
+
+    public JsonWriter(int batchSize) {
+        this.batchSize = batchSize;
+        data = new ArrayList<>();
         gsonBuilder = new GsonBuilder();
     }
 
     @Override
     public void saveAllData() {
-        List<RawDataRecord> data = serial.getRecordList();
+        if(data.size() > batchSize) {
+            List<TemperatureData> temperature = data.stream().filter(record -> record instanceof TemperatureData).map(rawDataRecord -> (TemperatureData) rawDataRecord).toList();
+            List<HumidityData> humidity = data.stream().filter(record -> record instanceof HumidityData).map(rawDataRecord -> (HumidityData) rawDataRecord).toList();
+            List<SoundData> sound = data.stream().filter(record -> record instanceof SoundData).map(rawDataRecord -> (SoundData) rawDataRecord).toList();
+            List<CO2Data> CO2 = data.stream().filter(record -> record instanceof CO2Data).map(rawDataRecord -> (CO2Data) rawDataRecord).toList();
 
-        List<TemperatureData> temperature = data.stream().filter(record -> record instanceof TemperatureData).map(rawDataRecord -> (TemperatureData) rawDataRecord).toList();
-        List<HumidityData> humidity = data.stream().filter(record -> record instanceof HumidityData).map(rawDataRecord -> (HumidityData) rawDataRecord).toList();
-        List<SoundData> sound = data.stream().filter(record -> record instanceof SoundData).map(rawDataRecord -> (SoundData) rawDataRecord).toList();
-        List<CO2Data> CO2 = data.stream().filter(record -> record instanceof CO2Data).map(rawDataRecord -> (CO2Data) rawDataRecord).toList();
+            saveTemperature(temperature);
+            saveHumidity(humidity);
+//            saveSound(sound);
+            saveCO2(CO2);
+            data.clear();
+        }
+    }
 
-        saveTemperature(temperature);
-        saveHumidity(humidity);
-//        saveSound(sound);
-        saveCO2(CO2);
+    @Override
+    public void addRawDataEntry(RawDataRecord rawDataRecord) {
+        data.add(rawDataRecord);
+    }
+
+    @Override
+    public void addRawDataEntries(List<RawDataRecord> rawDataRecordList) {
+        data.addAll(rawDataRecordList);
+    }
+
+    @Override
+    public List<RawDataRecord> getRecordList() {
+        return data;
     }
 
     private void saveTemperature(List<TemperatureData> temperatureData){

@@ -1,11 +1,12 @@
-package be.kdg.integration3;
+package be.kdg.integration3.reader;
 
+import be.kdg.integration3.reader.preprocessor.DataPreprocessor;
 import be.kdg.integration3.domain.raw.*;
+import be.kdg.integration3.writer.RawDataWriter;
 import com.fazecast.jSerialComm.SerialPort;
 
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -15,10 +16,12 @@ public class SerialRead {
     private int currentValue;
     private char currentDataType;
 
-    private List<RawDataRecord> recordList;
+    private final RawDataWriter writer;
+    private final DataPreprocessor preprocessor;
 
-    public SerialRead() {
-        this.recordList = new ArrayList<>();
+    public SerialRead(DataPreprocessor preprocessor, RawDataWriter writer) {
+        this.preprocessor = preprocessor;
+        this.writer = writer;
         initSerial();
         this.currentDataType = ' ';
     }
@@ -37,7 +40,7 @@ public class SerialRead {
 
     public int readSerial() {
         try {
-            while (port.bytesAvailable() > 0) {
+            if(port.bytesAvailable() > 0) {
                 byte[] readBuffer = new byte[port.bytesAvailable()];
                 int numRead = port.readBytes(readBuffer, readBuffer.length);
                 char[] readChars = new char[numRead];
@@ -68,22 +71,10 @@ public class SerialRead {
                 readingDataValue = false;
                 long recordTimestamp = Timestamp.from(Instant.now()).getTime();
                 switch (currentDataType) {
-                    case 'T':
-                        recordList.add(new TemperatureData(recordTimestamp, currentValue));
-                        newDataCount++;
-                        break;
-                    case 'H':
-                        recordList.add(new HumidityData(recordTimestamp, currentValue));
-                        newDataCount++;
-                        break;
-                    case 'C':
-                        recordList.add(new CO2Data(recordTimestamp, currentValue));
-                        newDataCount++;
-                        break;
-                    case 'S':
-//                        recordList.add(new SoundData(recordTimestamp, currentValue));
-//                        newDataCount++;
-                        break;
+                    case 'T' -> newDataCount += enterData(new TemperatureData(recordTimestamp, currentValue));
+                    case 'H' -> newDataCount += enterData(new HumidityData(recordTimestamp, currentValue));
+                    case 'C' -> newDataCount += enterData(new CO2Data(recordTimestamp, currentValue));
+                    case 'S' -> newDataCount += enterData(new SoundData(recordTimestamp, currentValue));
                 }
                 currentDataType = ' ';
             }
@@ -91,11 +82,10 @@ public class SerialRead {
         return newDataCount;
     }
 
-    public List<RawDataRecord> getRecordList() {
-        return recordList;
+    private int enterData(RawDataRecord newEntry) {
+        List<RawDataRecord> keptData = preprocessor.processRawData(newEntry);
+        writer.addRawDataEntries(keptData);
+        return keptData.size();
     }
 
-    public void clearRecordList() {
-        recordList = new ArrayList<>();
-    }
 }
