@@ -38,6 +38,7 @@ public class DBWriter implements RawDataWriter, SoundSpikeWriter {
                     "make sure the rs_db_cred environment variable is set.");
         }
         try {
+            System.out.println("Attempting to connect to database...");
             connection = DriverManager.getConnection(dbCredentials);
             connection.setAutoCommit(false);
             System.out.println("Database connection established.");
@@ -67,7 +68,7 @@ public class DBWriter implements RawDataWriter, SoundSpikeWriter {
             affectedRows += saveComplexData();
 
             recordList.clear();
-            System.out.printf("Save completed in %d ms affected rows: %d", System.currentTimeMillis() - saveStart, affectedRows);
+            System.out.printf("Save completed in %d ms affected rows: %d\n", System.currentTimeMillis() - saveStart, affectedRows);
         }
     }
 
@@ -97,7 +98,7 @@ public class DBWriter implements RawDataWriter, SoundSpikeWriter {
                 }
 
                 preparedStatement.setInt(2, dataRecord.getValue());
-                preparedStatement.setTimestamp(3, new Timestamp(dataRecord.getTimestamp()));
+                preparedStatement.setTimestamp(3, microsToTimestamp(dataRecord.getTimestamp()));
 
                 preparedStatement.addBatch();
             }
@@ -106,7 +107,8 @@ public class DBWriter implements RawDataWriter, SoundSpikeWriter {
             db.commit();
             return Arrays.stream(affectedRows).sum();
         }catch (SQLException e) {
-            throw new RuntimeException(e);
+            //throw new RuntimeException(e);
+            return 0;
         }
     }
 
@@ -134,8 +136,8 @@ public class DBWriter implements RawDataWriter, SoundSpikeWriter {
                     preparedStatement.setInt(1, room_id);
                 }
 
-                preparedStatement.setTimestamp(2, new Timestamp(spike.getEntryStart().getTimestamp()));
-                preparedStatement.setTimestamp(3, new Timestamp(spike.getEntryEnd().getTimestamp()));
+                preparedStatement.setTimestamp(2, microsToTimestamp(spike.getEntryStart().getTimestamp()));
+                preparedStatement.setTimestamp(3, microsToTimestamp(spike.getEntryEnd().getTimestamp()));
 
                 preparedStatement.addBatch();
             }
@@ -146,5 +148,12 @@ public class DBWriter implements RawDataWriter, SoundSpikeWriter {
         }catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static Timestamp microsToTimestamp(long micros) {
+        long secondStartMillis = (micros/1000000L) * 1000L;
+        Timestamp timestamp = new Timestamp(secondStartMillis);
+        timestamp.setNanos((int) ((micros - (secondStartMillis*1000L))*1000L));
+        return timestamp;
     }
 }

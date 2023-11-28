@@ -39,7 +39,7 @@ import java.util.List;
 public class SoundPreprocessor implements DataPreprocessor {
     static final int BUFFER_SIZE = 2500;
 
-    static final int WINDOW_SIZE_NOISE = 500;
+    static final int WINDOW_SIZE_NOISE = 1250;
     static final int WINDOW_SIZE_SPIKEDETECTION = 30;
     static final double SPIKEDETECTION_MULT_ACTIVATE = 2.5;
     static final double SPIKEDETECTION_MULT_DEACTIVATE = 0.5;
@@ -100,11 +100,12 @@ public class SoundPreprocessor implements DataPreprocessor {
         int noise = totalDiff / dataBuffer.size();
         noiseValues.add(new SoundData(entry.getTimestamp(), noise));
 
-        if(soundSpikeWriter != null) {
+        if(soundSpikeWriter != null && dataBuffer.size() > WINDOW_SIZE_SPIKEDETECTION) {
             int windowSum = 0;
             for(int i = 1; i <= WINDOW_SIZE_SPIKEDETECTION; i++) {
                 windowSum += Math.abs(dataBuffer.get(dataBuffer.size() - 1 - i).getValue() - dataBuffer.get(dataBuffer.size() - i).getValue());
             }
+
             if(spikeDetected) dataToKeep.add(entry);
             if(!spikeDetected && windowSum >= noise * SPIKEDETECTION_MULT_ACTIVATE) {
                 spikeDetected = true;

@@ -1,6 +1,6 @@
 package be.kdg.integration3;
 
-import be.kdg.integration3.reader.SerialRead;
+import be.kdg.integration3.reader.DataReader;
 import be.kdg.integration3.reader.TelnetRead;
 import be.kdg.integration3.reader.preprocessor.DataPreprocessor;
 import be.kdg.integration3.reader.preprocessor.SoundPreprocessor;
@@ -14,7 +14,7 @@ public class Main {
     public static void main(String[] args) {
         RawDataWriter writer;
         try {
-            writer = new DBWriter(null, SAVE_BATCH_SIZE);
+            writer = new DBWriter(7, SAVE_BATCH_SIZE);
         }catch (RuntimeException e) {
             System.err.println(e.getMessage());
             System.err.println("Falling back to JsonWriter...");
@@ -22,11 +22,10 @@ public class Main {
         }
 
         DataPreprocessor preprocessor = new SoundPreprocessor(writer);
-//        SerialRead read = new SerialRead(preprocessor, writer);
-        TelnetRead read = new TelnetRead(preprocessor, writer);
+        DataReader reader = new TelnetRead(preprocessor, writer);
 
         while (true) {
-            read.readData();
+            reader.readData();
             writer.saveAllData();
         }
     }

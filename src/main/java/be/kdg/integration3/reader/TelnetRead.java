@@ -17,26 +17,31 @@ public class TelnetRead extends DataReader {
     private final InputStream arduinoInput;
     private final BufferedReader arduinoBufferedRead;
 
-    public TelnetRead(DataPreprocessor preprocessor, RawDataWriter writer) {
+    public TelnetRead(DataPreprocessor preprocessor, RawDataWriter writer, String deviceIp, int devicePort) {
         super(preprocessor, writer);
 
         try {
-            arduinoSocket = new Socket(deviceIp, Integer.parseInt(devicePort));
+            System.out.println("Connecting to device at "+deviceIp+":"+devicePort+"... ");
+            arduinoSocket = new Socket(deviceIp, devicePort);
             arduinoInput = arduinoSocket.getInputStream();
             InputStreamReader arduinoInputCharacter = new InputStreamReader(arduinoInput);
             arduinoBufferedRead = new BufferedReader(arduinoInputCharacter);
+            System.out.println("Connected to device at "+deviceIp+":"+devicePort);
         } catch (IOException io) {
-
             throw new RuntimeException(io);
         }
 
+    }
+
+    public TelnetRead(DataPreprocessor preprocessor, RawDataWriter writer) {
+        this(preprocessor, writer, deviceIp, Integer.parseInt(devicePort));
     }
 
     @Override
     public int readData() {
         try {
             if (arduinoBufferedRead.ready()){
-                String line = arduinoBufferedRead.readLine();
+                String line = arduinoBufferedRead.readLine() + "\n";
                 char[] input = line.toCharArray();
                 return parseData(input);
             }

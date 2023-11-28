@@ -4,7 +4,6 @@ import be.kdg.integration3.domain.raw.*;
 import be.kdg.integration3.reader.preprocessor.DataPreprocessor;
 import be.kdg.integration3.writer.RawDataWriter;
 
-import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
 
@@ -37,12 +36,12 @@ public abstract class DataReader {
             }
             if(readingDataValue && c == '\n') {
                 readingDataValue = false;
-                long recordTimestamp = Timestamp.from(Instant.now()).getTime();
+                long recordTimestampMicro = Instant.now().getEpochSecond() * 1000000L + (Instant.now().getNano() / 1000);
                 switch (currentDataType) {
-                    case 'T' -> newDataCount += enterData(new TemperatureData(recordTimestamp, currentValue));
-                    case 'H' -> newDataCount += enterData(new HumidityData(recordTimestamp, currentValue));
-                    case 'C' -> newDataCount += enterData(new CO2Data(recordTimestamp, currentValue));
-                    case 'S' -> newDataCount += enterData(new SoundData(recordTimestamp, currentValue));
+                    case 'T' -> newDataCount += enterData(new TemperatureData(recordTimestampMicro, currentValue));
+                    case 'H' -> newDataCount += enterData(new HumidityData(recordTimestampMicro, currentValue));
+                    case 'C' -> newDataCount += enterData(new CO2Data(recordTimestampMicro, currentValue));
+                    case 'S' -> newDataCount += enterData(new SoundData(recordTimestampMicro, currentValue));
                 }
                 currentDataType = ' ';
             }
