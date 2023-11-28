@@ -1,6 +1,7 @@
 package be.kdg.integration3;
 
 import be.kdg.integration3.reader.SerialRead;
+import be.kdg.integration3.reader.TelnetRead;
 import be.kdg.integration3.reader.preprocessor.DataPreprocessor;
 import be.kdg.integration3.reader.preprocessor.SoundPreprocessor;
 import be.kdg.integration3.writer.DBWriter;
@@ -21,10 +22,11 @@ public class Main {
         }
 
         DataPreprocessor preprocessor = new SoundPreprocessor(writer);
-        SerialRead read = new SerialRead(preprocessor, writer);
+//        SerialRead read = new SerialRead(preprocessor, writer);
+        TelnetRead read = new TelnetRead(preprocessor, writer);
 
         while (true) {
-            read.readSerial();
+            read.readData();
             writer.saveAllData();
         }
     }

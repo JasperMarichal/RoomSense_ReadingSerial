@@ -1,61 +1,63 @@
 package be.kdg.integration3.reader;
 
-import be.kdg.integration3.reader.preprocessor.DataPreprocessor;
 import be.kdg.integration3.domain.raw.*;
+import be.kdg.integration3.reader.preprocessor.DataPreprocessor;
 import be.kdg.integration3.writer.RawDataWriter;
-import com.fazecast.jSerialComm.SerialPort;
 
+import java.io.*;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 
-public class SerialRead {
-    private SerialPort port;
+public class TelnetRead{
+    Socket arduinoSocket;
+    InputStream arduinoInput;
+    BufferedReader arduinoBufferedRead;
+    private final String deviceIp = System.getenv("rs_ip");
+    private final String devicePort = System.getenv("rs_port");
+
     private boolean readingDataValue;
     private int currentValue;
     private char currentDataType;
-
     private final RawDataWriter writer;
     private final DataPreprocessor preprocessor;
 
-    public SerialRead(DataPreprocessor preprocessor, RawDataWriter writer) {
+    public TelnetRead(DataPreprocessor preprocessor, RawDataWriter writer) {
         this.preprocessor = preprocessor;
         this.writer = writer;
-        initSerial();
+        initTelnet();
         this.currentDataType = ' ';
     }
 
-    private void initSerial() {
-        SerialPort[]  commPorts = SerialPort.getCommPorts();
-        System.out.println("List COM ports");
-        for(int i = 0; i < commPorts.length; i++) {
-            System.out.println("comPorts[" + i + "] = " + commPorts[i].getDescriptivePortName());
+    private void initTelnet() {
+        try {
+            arduinoSocket = new Socket(deviceIp, Integer.parseInt(devicePort));
+            arduinoInput = arduinoSocket.getInputStream();
+            InputStreamReader arduinoInputCharacter = new InputStreamReader(arduinoInput);
+            arduinoBufferedRead = new BufferedReader(arduinoInputCharacter);
+        } catch (IOException io){
+            System.out.println(Arrays.toString(io.getStackTrace()));
         }
-        SerialPort port = commPorts[0];     // array index to select COM port
-        port.setBaudRate(115200);
-        port.openPort();
-        this.port = port;
     }
 
     public int readData() {
         try {
-            if(port.bytesAvailable() > 0) {
-                byte[] readBuffer = new byte[port.bytesAvailable()];
-                int numRead = port.readBytes(readBuffer, readBuffer.length);
-                char[] readChars = new char[numRead];
-                for(int i = 0; i < readChars.length; i++) {
-                    readChars[i] = (char)readBuffer[i];
-                }
-                return parseSerial(readChars);
+            if (arduinoBufferedRead.ready()){
+                String line = arduinoBufferedRead.readLine();
+                char[] input = line.toCharArray();
+                return parseData(input);
             }
-        } catch (Exception e) {
+        } catch (IOException e){
             System.out.println(Arrays.toString(e.getStackTrace()));
         }
         return 0;
     }
 
-    private int parseSerial(char[] newSerialData) {
+
+    private int parseData(char[] newSerialData) {
         int newDataCount = 0;
         for(char c : newSerialData) {
             if(c == 'T' || c == 'H' || c == 'C' || c == 'S') {
@@ -87,5 +89,4 @@ public class SerialRead {
         writer.addRawDataEntries(keptData);
         return keptData.size();
     }
-
 }
