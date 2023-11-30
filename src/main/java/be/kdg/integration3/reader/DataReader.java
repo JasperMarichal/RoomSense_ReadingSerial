@@ -14,6 +14,8 @@ public abstract class DataReader {
     private boolean readingDataValue;
     private int currentValue;
 
+    private long lastMicro;
+
     public DataReader(DataPreprocessor preprocessor, RawDataWriter writer) {
         this.currentDataType = ' ';
         this.writer = writer;
@@ -37,6 +39,11 @@ public abstract class DataReader {
             if(readingDataValue && c == '\n') {
                 readingDataValue = false;
                 long recordTimestampMicro = Instant.now().getEpochSecond() * 1000000L + (Instant.now().getNano() / 1000);
+                if(recordTimestampMicro <= lastMicro) {
+                    recordTimestampMicro = lastMicro + 3L;
+                }
+                lastMicro = recordTimestampMicro;
+
                 switch (currentDataType) {
                     case 'T' -> newDataCount += enterData(new TemperatureData(recordTimestampMicro, currentValue));
                     case 'H' -> newDataCount += enterData(new HumidityData(recordTimestampMicro, currentValue));

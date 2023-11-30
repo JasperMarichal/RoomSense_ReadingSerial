@@ -41,8 +41,8 @@ public class SoundPreprocessor implements DataPreprocessor {
 
     static final int WINDOW_SIZE_NOISE = 1250;
     static final int WINDOW_SIZE_SPIKEDETECTION = 30;
-    static final double SPIKEDETECTION_MULT_ACTIVATE = 2.5;
-    static final double SPIKEDETECTION_MULT_DEACTIVATE = 0.5;
+    static final double SPIKEDETECTION_MULT_ACTIVATE = 5;
+    static final double SPIKEDETECTION_MULT_DEACTIVATE = 1;
 
     private final SoundSpikeWriter soundSpikeWriter;
 
@@ -53,6 +53,7 @@ public class SoundPreprocessor implements DataPreprocessor {
 
     //Noise
     int totalDiff;
+    List<Integer> difference;
     List<RawDataRecord> noiseValues;
 
     //Spike Detection
@@ -71,6 +72,7 @@ public class SoundPreprocessor implements DataPreprocessor {
         totalSum = 0;
         totalDiff = 0;
         this.noiseValues = new ArrayList<>();
+        this.difference = new ArrayList<>();
     }
 
     @Override
@@ -96,23 +98,30 @@ public class SoundPreprocessor implements DataPreprocessor {
         totalSum += entry.getValue();
         int avg = totalSum / dataBuffer.size();
 
-        totalDiff += Math.abs(entry.getValue() - avg);
-        int noise = totalDiff / dataBuffer.size();
+        int diff = Math.abs(entry.getValue() - avg);
+        totalDiff += diff;
+        difference.add(diff);
+        int noise = totalDiff * 100 / dataBuffer.size();
         noiseValues.add(new SoundData(entry.getTimestamp(), noise));
 
-        if(soundSpikeWriter != null && dataBuffer.size() > WINDOW_SIZE_SPIKEDETECTION) {
-            int windowSum = 0;
+        if(soundSpikeWriter != null && dataBuffer.size() >= BUFFER_SIZE/2) {
+            int windowAvg = 0;
             for(int i = 1; i <= WINDOW_SIZE_SPIKEDETECTION; i++) {
-                windowSum += Math.abs(dataBuffer.get(dataBuffer.size() - 1 - i).getValue() - dataBuffer.get(dataBuffer.size() - i).getValue());
+                windowAvg += Math.abs(dataBuffer.get(dataBuffer.size() - 1 - i).getValue() - dataBuffer.get(dataBuffer.size() - i).getValue()) * 100;
             }
+            windowAvg /= WINDOW_SIZE_SPIKEDETECTION;
 
             if(spikeDetected) dataToKeep.add(entry);
-            if(!spikeDetected && windowSum >= noise * SPIKEDETECTION_MULT_ACTIVATE) {
+            if(!spikeDetected && windowAvg >= noise * SPIKEDETECTION_MULT_ACTIVATE) {
                 spikeDetected = true;
                 deactivationThreshold = noise * SPIKEDETECTION_MULT_DEACTIVATE;
-                spikeStart = entry;
-                dataToKeep.add(spikeStart);
-            } else if(spikeDetected && windowSum < deactivationThreshold) {
+                spikeStart = dataBuffer.get(dataBuffer.size() - WINDOW_SIZE_SPIKEDETECTION);
+                for(int i = 0; i < WINDOW_SIZE_SPIKEDETECTION;i++) {
+                    dataToKeep.add(dataBuffer.get(dataBuffer.size() - (WINDOW_SIZE_SPIKEDETECTION-i)));
+                }
+                System.out.printf("SPIKE START windowAvg: %d act: %f deact: %f\n", windowAvg, noise * SPIKEDETECTION_MULT_ACTIVATE, noise * SPIKEDETECTION_MULT_DEACTIVATE);
+            } else if(spikeDetected && windowAvg < deactivationThreshold) {
+                System.out.printf("SPIKE END windowAvg: %d act: %f deact: %f\n", windowAvg, noise * SPIKEDETECTION_MULT_ACTIVATE, deactivationThreshold);
                 spikeDetected = false;
                 soundSpikeWriter.addComplexData_SoundSpike(new SoundSpike(spikeStart, entry));
             }
@@ -125,7 +134,8 @@ public class SoundPreprocessor implements DataPreprocessor {
         if(noiseValues.size() > BUFFER_SIZE) {
             dataToKeep.add(new NoiseData(WINDOW_SIZE_NOISE, noiseValues.iterator()));
             for(int i = 0; i < WINDOW_SIZE_NOISE;i++) {
-                totalDiff -= noiseValues.remove(noiseValues.size() - 1).getValue();
+                totalDiff -= difference.remove(0);
+                noiseValues.remove(0);
             }
         }
 

@@ -107,8 +107,7 @@ public class DBWriter implements RawDataWriter, SoundSpikeWriter {
             db.commit();
             return Arrays.stream(affectedRows).sum();
         }catch (SQLException e) {
-            //throw new RuntimeException(e);
-            return 0;
+            throw new RuntimeException(e);
         }
     }
 
