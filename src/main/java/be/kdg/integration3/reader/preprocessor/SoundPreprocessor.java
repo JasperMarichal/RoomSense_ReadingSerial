@@ -41,8 +41,10 @@ public class SoundPreprocessor implements DataPreprocessor {
 
     static final int WINDOW_SIZE_NOISE = 1250;
     static final int WINDOW_SIZE_SPIKEDETECTION = 30;
-    static final double SPIKEDETECTION_MULT_ACTIVATE = 5;
+    static final double SPIKEDETECTION_MULT_ACTIVATE = 3;
+    static final double SPIKEDETECTION_MIN_ACTIVATE = 60;
     static final double SPIKEDETECTION_MULT_DEACTIVATE = 1;
+    static final double SPIKEDETECTION_INCLUDED_WINDOW_FACTOR = 0.3;
 
     private final SoundSpikeWriter soundSpikeWriter;
 
@@ -111,17 +113,20 @@ public class SoundPreprocessor implements DataPreprocessor {
             }
             windowAvg /= WINDOW_SIZE_SPIKEDETECTION;
 
+            double activationThreshold = Math.max(SPIKEDETECTION_MIN_ACTIVATE, noise * SPIKEDETECTION_MULT_ACTIVATE);
+
             if(spikeDetected) dataToKeep.add(entry);
-            if(!spikeDetected && windowAvg >= noise * SPIKEDETECTION_MULT_ACTIVATE) {
+            if(!spikeDetected && windowAvg >= activationThreshold) {
                 spikeDetected = true;
                 deactivationThreshold = noise * SPIKEDETECTION_MULT_DEACTIVATE;
-                spikeStart = dataBuffer.get(dataBuffer.size() - WINDOW_SIZE_SPIKEDETECTION);
-                for(int i = 0; i < WINDOW_SIZE_SPIKEDETECTION;i++) {
-                    dataToKeep.add(dataBuffer.get(dataBuffer.size() - (WINDOW_SIZE_SPIKEDETECTION-i)));
+                int savedWindow = (int) (WINDOW_SIZE_SPIKEDETECTION*SPIKEDETECTION_INCLUDED_WINDOW_FACTOR);
+                spikeStart = dataBuffer.get(dataBuffer.size() - savedWindow);
+                for(int i = savedWindow; i > 0; i--) {
+                    dataToKeep.add(dataBuffer.get(dataBuffer.size() - i));
                 }
-                System.out.printf("SPIKE START windowAvg: %d act: %f deact: %f\n", windowAvg, noise * SPIKEDETECTION_MULT_ACTIVATE, noise * SPIKEDETECTION_MULT_DEACTIVATE);
+                System.out.printf("SPIKE START windowAvg: %d act: %f deact: %f\n", windowAvg, activationThreshold, noise * SPIKEDETECTION_MULT_DEACTIVATE);
             } else if(spikeDetected && windowAvg < deactivationThreshold) {
-                System.out.printf("SPIKE END windowAvg: %d act: %f deact: %f\n", windowAvg, noise * SPIKEDETECTION_MULT_ACTIVATE, deactivationThreshold);
+                System.out.printf("SPIKE END windowAvg: %d act: %f deact: %f\n", windowAvg, activationThreshold, deactivationThreshold);
                 spikeDetected = false;
                 soundSpikeWriter.addComplexData_SoundSpike(new SoundSpike(spikeStart, entry));
             }
