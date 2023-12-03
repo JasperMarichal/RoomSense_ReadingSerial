@@ -1,27 +1,16 @@
 package be.kdg.integration3.reader;
 
 import be.kdg.integration3.reader.preprocessor.DataPreprocessor;
-import be.kdg.integration3.domain.raw.*;
 import be.kdg.integration3.writer.RawDataWriter;
 import com.fazecast.jSerialComm.SerialPort;
 
-import java.sql.Timestamp;
-import java.time.Instant;
 import java.util.Arrays;
-import java.util.List;
 
-public class SerialRead {
+public class SerialRead extends DataReader {
     private SerialPort port;
-    private boolean readingDataValue;
-    private int currentValue;
-    private char currentDataType;
-
-    private final RawDataWriter writer;
-    private final DataPreprocessor preprocessor;
 
     public SerialRead(DataPreprocessor preprocessor, RawDataWriter writer) {
-        this.preprocessor = preprocessor;
-        this.writer = writer;
+        super(preprocessor, writer);
         initSerial();
         this.currentDataType = ' ';
     }
@@ -38,7 +27,8 @@ public class SerialRead {
         this.port = port;
     }
 
-    public int readSerial() {
+    @Override
+    public int readData() {
         try {
             if(port.bytesAvailable() > 0) {
                 byte[] readBuffer = new byte[port.bytesAvailable()];
@@ -47,45 +37,12 @@ public class SerialRead {
                 for(int i = 0; i < readChars.length; i++) {
                     readChars[i] = (char)readBuffer[i];
                 }
-                return parseSerial(readChars);
+                return parseData(readChars);
             }
         } catch (Exception e) {
             System.out.println(Arrays.toString(e.getStackTrace()));
         }
         return 0;
-    }
-
-    private int parseSerial(char[] newSerialData) {
-        int newDataCount = 0;
-        for(char c : newSerialData) {
-            if(c == 'T' || c == 'H' || c == 'C' || c == 'S') {
-                currentDataType = c;
-                readingDataValue = true;
-                currentValue = 0;
-            }
-            if(readingDataValue && c >= '0' && c <= '9'){
-                currentValue *= 10;
-                currentValue += (c - '0');
-            }
-            if(readingDataValue && c == '\n') {
-                readingDataValue = false;
-                long recordTimestamp = Timestamp.from(Instant.now()).getTime();
-                switch (currentDataType) {
-                    case 'T' -> newDataCount += enterData(new TemperatureData(recordTimestamp, currentValue));
-                    case 'H' -> newDataCount += enterData(new HumidityData(recordTimestamp, currentValue));
-                    case 'C' -> newDataCount += enterData(new CO2Data(recordTimestamp, currentValue));
-                    case 'S' -> newDataCount += enterData(new SoundData(recordTimestamp, currentValue));
-                }
-                currentDataType = ' ';
-            }
-        }
-        return newDataCount;
-    }
-
-    private int enterData(RawDataRecord newEntry) {
-        List<RawDataRecord> keptData = preprocessor.processRawData(newEntry);
-        writer.addRawDataEntries(keptData);
-        return keptData.size();
     }
 
 }

@@ -12,14 +12,14 @@ public class SimpleProcessedData implements RawDataRecord {
     public SimpleProcessedData(int windowSize, Iterator<RawDataRecord> it) {
         this.windowSize = windowSize;
         int totVal = 0;
-        long totTimestamp = 0;
+        long medianTimestamp = 0;
         for(int i = 0; i < windowSize;i++) {
             RawDataRecord record = it.next();
             totVal += record.getValue();
-            totTimestamp += record.getTimestamp();
+            if(i == windowSize/2) medianTimestamp = record.getTimestamp();
         }
         this.average = totVal / windowSize;
-        this.timestamp = totTimestamp / windowSize;
+        this.timestamp = medianTimestamp;
     }
 
     public int getWindowSize() {
