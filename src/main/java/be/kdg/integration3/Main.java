@@ -29,29 +29,30 @@ public class Main {
                 }
             }
         } catch (NumberFormatException e){
-            System.out.println("Port or Room was not entered as an int");
+            System.out.println("Port and Room must be entered as a number!");
         }
 
         if (port == 0 || roomId == 0 || ip.isEmpty()){
             System.err.println("You have not entered at least one of the runtime variables");
             System.out.println("Ensure you have defined 'ip=ipAddress port=portNumber room=roomId'");
-        } else {
-            RawDataWriter writer;
-            try {
-                writer = new DBWriter(roomId, SAVE_BATCH_SIZE);
-            } catch (RuntimeException e) {
-                System.err.println(e.getMessage());
-                System.err.println("Falling back to JsonWriter...");
-                writer = new JsonWriter(SAVE_BATCH_SIZE);
-            }
+            return;
+        }
 
-            DataPreprocessor preprocessor = new SoundPreprocessor(writer);
-            DataReader reader = new TelnetRead(preprocessor, writer, ip, port);
+        RawDataWriter writer;
+        try {
+            writer = new DBWriter(roomId, SAVE_BATCH_SIZE);
+        } catch (RuntimeException e) {
+            System.err.println(e.getMessage());
+            System.err.println("Falling back to JsonWriter...");
+            writer = new JsonWriter(SAVE_BATCH_SIZE);
+        }
 
-            while (true) {
-                reader.readData();
-                writer.saveAllData();
-            }
+        DataPreprocessor preprocessor = new SoundPreprocessor(writer);
+        DataReader reader = new TelnetRead(preprocessor, writer, ip, port);
+
+        while (true) {
+            reader.readData();
+            writer.saveAllData();
         }
     }
 }
