@@ -41,8 +41,8 @@ public class SoundPreprocessor implements DataPreprocessor {
 
     static final int WINDOW_SIZE_NOISE = 1250;
     static final int WINDOW_SIZE_SPIKEDETECTION = 30;
-    static final double SPIKEDETECTION_MULT_ACTIVATE = 3;
-    static final double SPIKEDETECTION_MIN_ACTIVATE = 60;
+    static final double SPIKEDETECTION_MULT_ACTIVATE = 5;
+    static final double SPIKEDETECTION_MIN_ACTIVATE = 80;
     static final double SPIKEDETECTION_MULT_DEACTIVATE = 1;
     static final double SPIKEDETECTION_INCLUDED_WINDOW_FACTOR = 0.3;
 
