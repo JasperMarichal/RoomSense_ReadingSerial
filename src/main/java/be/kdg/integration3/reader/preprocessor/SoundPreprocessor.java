@@ -41,6 +41,7 @@ public class SoundPreprocessor implements DataPreprocessor {
 
     static final int WINDOW_SIZE_NOISE = 1250;
     static final int WINDOW_SIZE_SPIKEDETECTION = 30;
+    static final int SPIKEDETECTION_MAX_SPIKELENGTH = 150;
     static final double SPIKEDETECTION_MULT_ACTIVATE = 5;
     static final double SPIKEDETECTION_MIN_ACTIVATE = 100;
     static final double SPIKEDETECTION_MULT_DEACTIVATE = 1;
@@ -62,6 +63,7 @@ public class SoundPreprocessor implements DataPreprocessor {
     boolean spikeDetected = false;
     double deactivationThreshold;
     SoundData spikeStart;
+    int spikeLength = 0;
 
     public SoundPreprocessor(RawDataWriter complexWriter) {
         if(complexWriter instanceof SoundSpikeWriter) {
@@ -115,7 +117,10 @@ public class SoundPreprocessor implements DataPreprocessor {
 
             double activationThreshold = Math.max(SPIKEDETECTION_MIN_ACTIVATE, noise * SPIKEDETECTION_MULT_ACTIVATE);
 
-            if(spikeDetected) dataToKeep.add(entry);
+            if(spikeDetected) {
+                dataToKeep.add(entry);
+                spikeLength++;
+            }
             if(!spikeDetected && windowAvg >= activationThreshold) {
                 spikeDetected = true;
                 deactivationThreshold = noise * SPIKEDETECTION_MULT_DEACTIVATE;
@@ -125,9 +130,10 @@ public class SoundPreprocessor implements DataPreprocessor {
                     dataToKeep.add(dataBuffer.get(dataBuffer.size() - i));
                 }
                 System.out.printf("SPIKE START windowAvg: %d act: %f deact: %f\n", windowAvg, activationThreshold, noise * SPIKEDETECTION_MULT_DEACTIVATE);
-            } else if(spikeDetected && windowAvg < deactivationThreshold) {
+            } else if(spikeDetected && (windowAvg < deactivationThreshold || spikeLength >= SPIKEDETECTION_MAX_SPIKELENGTH)) {
                 System.out.printf("SPIKE END windowAvg: %d act: %f deact: %f\n", windowAvg, activationThreshold, deactivationThreshold);
                 spikeDetected = false;
+                spikeLength = 0;
                 soundSpikeWriter.addComplexData_SoundSpike(new SoundSpike(spikeStart, entry));
             }
         }
