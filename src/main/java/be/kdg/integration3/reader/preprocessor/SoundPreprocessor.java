@@ -44,7 +44,7 @@ public class SoundPreprocessor implements DataPreprocessor {
     static final int SPIKEDETECTION_MAX_SPIKELENGTH = 150;
     static final double SPIKEDETECTION_MULT_ACTIVATE = 5;
     static final double SPIKEDETECTION_MIN_ACTIVATE = 100;
-    static final double SPIKEDETECTION_MULT_DEACTIVATE = 1;
+    static final double SPIKEDETECTION_MULT_DEACTIVATE = 1.4;
     static final double SPIKEDETECTION_INCLUDED_WINDOW_FACTOR = 0.3;
 
     private final SoundSpikeWriter soundSpikeWriter;
@@ -128,10 +128,11 @@ public class SoundPreprocessor implements DataPreprocessor {
                 spikeStart = dataBuffer.get(dataBuffer.size() - savedWindow);
                 for(int i = savedWindow; i > 0; i--) {
                     dataToKeep.add(dataBuffer.get(dataBuffer.size() - i));
+                    spikeLength++;
                 }
                 System.out.printf("SPIKE START windowAvg: %d act: %f deact: %f\n", windowAvg, activationThreshold, noise * SPIKEDETECTION_MULT_DEACTIVATE);
-            } else if(spikeDetected && (windowAvg < deactivationThreshold || spikeLength >= SPIKEDETECTION_MAX_SPIKELENGTH)) {
-                System.out.printf("SPIKE END windowAvg: %d act: %f deact: %f\n", windowAvg, activationThreshold, deactivationThreshold);
+            } else if(spikeDetected && (windowAvg <= deactivationThreshold || spikeLength >= SPIKEDETECTION_MAX_SPIKELENGTH)) {
+                System.out.printf("SPIKE END windowAvg: %d act: %f deact: %f len: %d\n", windowAvg, activationThreshold, deactivationThreshold, spikeLength);
                 spikeDetected = false;
                 spikeLength = 0;
                 soundSpikeWriter.addComplexData_SoundSpike(new SoundSpike(spikeStart, entry));

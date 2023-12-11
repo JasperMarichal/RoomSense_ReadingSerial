@@ -53,22 +53,27 @@ public class DBWriter implements RawDataWriter, SoundSpikeWriter {
             long saveStart = System.currentTimeMillis();
             int affectedRows = 0;
 
-            List<RawDataRecord> temperature = recordList.stream().filter(record -> record instanceof TemperatureData).toList();
-            List<RawDataRecord> humidity = recordList.stream().filter(record -> record instanceof HumidityData).toList();
-            List<RawDataRecord> sound = recordList.stream().filter(record -> record instanceof SoundData).toList();
-            List<RawDataRecord> co2 = recordList.stream().filter(record -> record instanceof CO2Data).toList();
-            List<RawDataRecord> noise = recordList.stream().filter(record -> record instanceof NoiseData).toList();
+            try {
+                connection.beginRequest();
+                List<RawDataRecord> temperature = recordList.stream().filter(record -> record instanceof TemperatureData).toList();
+                List<RawDataRecord> humidity = recordList.stream().filter(record -> record instanceof HumidityData).toList();
+                List<RawDataRecord> sound = recordList.stream().filter(record -> record instanceof SoundData).toList();
+                List<RawDataRecord> co2 = recordList.stream().filter(record -> record instanceof CO2Data).toList();
+                List<RawDataRecord> noise = recordList.stream().filter(record -> record instanceof NoiseData).toList();
 
-            affectedRows += saveEntries("temperature_entry", connection, roomId, temperature);
-            affectedRows += saveEntries("humidity_entry", connection, roomId, humidity);
-            affectedRows += saveEntries("raw_sound_entry", connection, roomId, sound);
-            affectedRows += saveEntries("co2_entry", connection, roomId, co2);
-            affectedRows += saveEntries("noise_entry", connection, roomId, noise);
+                affectedRows += saveEntries("temperature_entry", connection, roomId, temperature);
+                affectedRows += saveEntries("humidity_entry", connection, roomId, humidity);
+                affectedRows += saveEntries("raw_sound_entry", connection, roomId, sound);
+                affectedRows += saveEntries("co2_entry", connection, roomId, co2);
+                affectedRows += saveEntries("noise_entry", connection, roomId, noise);
 
-            affectedRows += saveComplexData();
-
-            recordList.clear();
-            System.out.printf("Save completed in %d ms affected rows: %d\n", System.currentTimeMillis() - saveStart, affectedRows);
+                affectedRows += saveComplexData();
+                connection.endRequest();
+                recordList.clear();
+                System.out.printf("Save completed in %d ms affected rows: %d\n", System.currentTimeMillis() - saveStart, affectedRows);
+            } catch (SQLException e) {
+                System.err.printf("Save failed in %d ms affected rows: %d\n", System.currentTimeMillis() - saveStart, affectedRows);
+            }
         }
     }
 
@@ -107,7 +112,8 @@ public class DBWriter implements RawDataWriter, SoundSpikeWriter {
             db.commit();
             return Arrays.stream(affectedRows).sum();
         }catch (SQLException e) {
-            throw new RuntimeException(e);
+            System.err.println("DBWriter: "+e.getMessage());
+            return 0;
         }
     }
 
@@ -145,7 +151,8 @@ public class DBWriter implements RawDataWriter, SoundSpikeWriter {
             db.commit();
             return Arrays.stream(affectedRows).sum();
         }catch (SQLException e) {
-            throw new RuntimeException(e);
+            System.err.println("DBWriter: "+e.getMessage());
+            return 0;
         }
     }
 
