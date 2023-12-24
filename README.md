@@ -1,5 +1,11 @@
 # ReadingSerial
 
+### Other projects:
+- SpringProject, main project used to host website and process data:
+    - https://gitlab.com/kdg-ti/integration-2.1/23-24/group-3/springproject
+- Arudino, project that houses both the arduino application and the application for the ESP8266
+    - https://gitlab.com/kdg-ti/integration-2.1/23-24/group-3/arduino
+
 In order to be able to run this program, you will need 1 environmental variable and 3 command line arguments.
 
 - Environmental variables:
