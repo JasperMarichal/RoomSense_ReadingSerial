@@ -16,6 +16,6 @@ For command line arguments: `run --args="ip=deviceIP port=devicePort room=roomID
 
 ### Other projects:
 - SpringProject, main project used to host website and process data:
-    - https://gitlab.com/kdg-ti/integration-2.1/23-24/group-3/springproject
+    - https://github.com/JasperMarichal/RoomSense_SpringApplication
 - Arduino, project that houses both the arduino application and the application for the ESP8266
-    - https://gitlab.com/kdg-ti/integration-2.1/23-24/group-3/arduino
+    - https://github.com/JasperMarichal/RoomSense_Arduino
